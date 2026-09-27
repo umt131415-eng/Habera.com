@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canlı Haberler & Favoriler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Üst Başlık ve Sekmeler */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #38bdf8;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: bold;
+        }
+
+        /* Haber Izgarası (Grid) */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* Haber Kartı */
+        .news-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .news-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .news-content {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-tag {
+            font-size: 11px;
+            color: #38bdf8;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            color: #f1f5f9;
+        }
+
+        .news-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            flex: 1;
+        }
+
+        .news-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid #334155;
+        }
+
+        .read-btn {
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* Favori Butonu */
+        .fav-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .fav-btn.active {
+            color: #ef4444; /* Kırmızı Kalp */
+        }
+
+        .fav-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #64748b;
+            grid-column: 1 / -1;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📰 Canlı Haberler</h1>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('all')">Tüm Haberler</button>
+                <button class="tab-btn" onclick="switchTab('favs')">Favoriler (<span id="fav-count">0</span>)</button>
+            </div>
+        </header>
+
+        <!-- Haber Listesi -->
+        <div class="news-grid" id="news-container"></div>
+    </div>
+
+    <script>
+        // Örnek Canlı Haber Verileri
+        const newsData = [
+            {
+                id: 1,
+                tag: "Teknoloji",
+                title: "Yapay Zeka Modellerinde Yeni Dönem Başladı",
+                desc: "Geliştirilen yeni algoritmalar sayesinde yapay zeka sistemleri artık daha az güç tüketerek anlık veri işleyebiliyor.",
+                image: "https://picsum.photos/400/200?random=1",
+                link: "#"
+            },
+            {
+                id: 2,
+                tag: "Uzay",
+                title: "Mars Yüzeyinde Yeni Su İzlerine Rastlandı",
+                desc: "Uzay gözlem araçlarının elde ettiği son yüksek çözünürlüklü görseller krater bölgelerinde geçmişe ait su akıntılarını doğruladı.",
+                image: "https://picsum.photos/400/200?random=2",
+                link: "#"
+            },
+            {
+                id: 3,
+                tag: "Ekonomi",
+                title: "Küresel Piyasalarda Dijital Dönüşüm Hızlanıyor",
+                desc: "Finans sektöründe blokzincir ve dijital varlık entegrasyonu şirketlerin işlem maliyetlerini büyük oranda düşürüyor.",
+                image: "https://picsum.photos/400/200?random=3",
+                link: "#"
+            },
+            {
+                id: 4,
+                tag: "Çevre",
+                title: "Yenilenebilir Enerji Kullanımında Rekor Seviye",
+                desc: "Rüzgar ve güneş enerjisi santrallerinden üretilen toplam elektrik miktarı bu yıl küresel ölçekte tarihi bir zirveye ulaştı.",
+                image: "https://picsum.photos/400/200?random=4",
+                link: "#"
+            }
+        ];
+
+        // Favorileri LocalStorage'dan yükle
+        let favorites = JSON.parse(localStorage.getItem('fav_news')) || [];
+        let currentTab = 'all';
+
+        function saveFavorites() {
+            localStorage.setItem('fav_news', JSON.stringify(favorites));
+            document.getElementById('fav-count').innerText = favorites.length;
+        }
+
+        function toggleFavorite(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(favId => favId !== id);
+            } else {
+                favorites.push(id);
+            }
+            saveFavorites();
+            renderNews();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderNews();
+        }
+
+        function renderNews() {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+
+            const listToRender = currentTab === 'all' 
+                ? newsData 
+                : newsData.filter(news => favorites.includes(news.id));
+
+            if (listToRender.length === 0) {
+                container.innerHTML = `<div class="empty-msg">${currentTab === 'favs' ? 'Henüz favorilere eklenmiş bir haber yok.' : 'Haber bulunamadı.'}</div>`;
+                return;
+            }
+
+            listToRender.forEach(news => {
+                const isFav = favorites.includes(news.id);
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                card.innerHTML = `
+                    <img src="${news.image}" alt="Haber Görseli">
+                    <div class="news-content">
+                        <span class="news-tag">${news.tag}</span>
+                        <h2 class="news-title">${news.title}</h2>
+                        <p class="news-desc">${news.desc}</p>
+                        <div class="news-footer">
+                            <a href="${news.link}" class="read-btn" target="_blank">Devamını Oku →</a>
+                            <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${news.id})" title="Favorilere Ekle/Çıkar">
+                                ${isFav ? '❤️' : '🤍'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Sayfa ilk açıldığında favori sayısını yükle ve haberleri bas
+        document.getElementById('fav-count').innerText = favorites.length;
+        renderNews();
+    </script>
+</body>
+</html>
+
